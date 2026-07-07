@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chiesi Career Companion</title>
+    <link rel="stylesheet" href="/static/style.css">
+
+    <style>
+
+        /* =========================
+           CINEMATIC TWO-PHASE BACKGROUND
+        ========================== */
+
+        body {
+            margin: 0;
+            color: white;
+            font-family: Arial, sans-serif;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        /* PINK PHASE */
+        body::before {
+            background: linear-gradient(
+                135deg,
+                #610233 0%,
+                #610233 60%,
+                #438aa2 100%
+            );
+            animation: phasePink 5s ease-in-out infinite alternate;
+            opacity: 1;
+        }
+
+        /* TEAL PHASE */
+        body::after {
+            background: linear-gradient(
+                135deg,
+                #438aa2 0%,
+                #438aa2 60%,
+                #610233 100%
+            );
+            animation: phaseTeal 5s ease-in-out infinite alternate;
+            opacity: 0;
+        }
+
+        @keyframes phasePink {
+            0%, 40% { opacity: 1; }
+            60%, 100% { opacity: 0; }
+        }
+
+        @keyframes phaseTeal {
+            0%, 40% { opacity: 0; }
+            60%, 100% { opacity: 1; }
+        }
+
+        /* =========================
+           FLOATING PARTICLES
+        ========================== */
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 50%;
+            animation: floatUp 14s linear infinite;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(100vh); opacity: 0; }
+            50% { opacity: 0.3; }
+            100% { transform: translateY(-10vh); opacity: 0; }
+        }
+
+        /* =========================
+           LAYOUT
+        ========================== */
+
+        .container {
+            padding-top: 5px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero {
+            margin-top: -20px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            margin: 0;
+            font-size: 44px;
+            font-weight: 700;
+        }
+
+        .hero .pink {
+            animation: discoverShift 5s ease-in-out infinite alternate;
+        }
+
+        .hero .teal {
+            animation: careerShift 5s ease-in-out infinite alternate;
+        }
+
+        @keyframes discoverShift {
+            0%, 40% { color: #438aa2; }
+            60%, 100% { color: #ffffff; }
+        }
+
+        @keyframes careerShift {
+            0%, 40% { color: #ffffff; }
+            60%, 100% { color: #b5025f; }
+        }
+
+        /* =========================
+           CARDS (BASE)
+        ========================== */
+
+        .card {
+            text-decoration: none;
+            color: white;
+
+            border-radius: 18px;
+            padding: 22px;
+
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+
+            border: 1px solid rgba(255,255,255,0.12);
+
+            transition: all 0.2s ease; /* faster response = smoother glow switch */
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border: 1px solid rgba(255,255,255,0.25);
+            box-shadow: 0 10px 35px rgba(0,0,0,0.35);
+        }
+
+        /* =========================
+           CARD TYPES
+        ========================== */
+
+        .pink-card:hover {
+            border: 1px solid rgba(181, 2, 95, 0.7);
+            background: rgba(181, 2, 95, 0.12);
+
+            box-shadow:
+                0 0 25px rgba(181, 2, 95, 0.65),
+                0 10px 40px rgba(0, 0, 0, 0.35);
+
+            transform: translateY(-10px) scale(1.04);
+        }
+
+        .teal-card:hover {
+            border: 1px solid rgba(67, 138, 162, 0.7);
+            background: rgba(67, 138, 162, 0.12);
+
+            box-shadow:
+                0 0 25px rgba(67, 138, 162, 0.65),
+                0 10px 40px rgba(0, 0, 0, 0.35);
+
+            transform: translateY(-10px) scale(1.04);
+        }
+
+        /* =========================
+           STATE-AWARE INVERTED GLOW (KEY FIX)
+        ========================== */
+
+        body.pink-phase .pink-card:hover {
+            box-shadow:
+                0 0 25px rgba(67, 138, 162, 0.75),
+                0 10px 40px rgba(0, 0, 0, 0.35);
+        }
+
+        body.pink-phase .teal-card:hover {
+            box-shadow:
+                0 0 25px rgba(181, 2, 95, 0.75),
+                0 10px 40px rgba(0, 0, 0, 0.35);
+        }
+
+        body.teal-phase .pink-card:hover {
+            box-shadow:
+                0 0 25px rgba(181, 2, 95, 0.75),
+                0 10px 40px rgba(0, 0, 0, 0.35);
+        }
+
+        body.teal-phase .teal-card:hover {
+            box-shadow:
+                0 0 25px rgba(67, 138, 162, 0.75),
+                0 10px 40px rgba(0, 0, 0, 0.35);
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="particles" id="particles"></div>
+
+<div class="container">
+
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:10px;">
+        <img src="/static/logo.png"
+             style="width:160px;height:160px;object-fit:contain;">
+
+        <div>
+            <h2 style="margin:0;font-size:28px;">Chiesi</h2>
+            <p style="margin:0;opacity:0.85;font-size:14px;">Career Companion</p>
+        </div>
+    </div>
+
+    <div class="hero">
+        <h1>
+            <span class="pink">Discover Your</span>
+            <span class="teal">Career Path</span>
+        </h1>
+        <p>
+            Explore personalised career pathways, discover your strengths,<br>
+            and learn more about opportunities across Chiesi UK.
+        </p>
+    </div>
+
+    <div class="grid">
+
+        <a class="card pink-card" href="/chat">
+            <h2>💬 Ask Me Anything</h2>
+            <p>Chat with the Career Companion about careers, departments and opportunities.</p>
+        </a>
+
+        <a class="card pink-card" href="/path">
+            <h2>🎯 Discover My Path</h2>
+            <p>Find the Chiesi department that best matches your interests and ambitions.</p>
+        </a>
+
+        <a class="card teal-card" href="/skills">
+            <h2>🧩 Match My Skills</h2>
+            <p>Identify your strengths and discover where you could thrive.</p>
+        </a>
+
+        <a class="card teal-card" href="https://www.chiesi.uk.com/" target="_blank">
+            <h2>🌐 Explore Chiesi UK</h2>
+            <p>Learn more about Chiesi, our mission, values and impact in healthcare.</p>
+        </a>
+
+
+	<a class="card teal-card" href="https://chiesi-kindred-spark.lovable.app/" target="_blank">
+            <h2>🌐 Chiesi Early Careers UK</h2>
+            <p>Your one-stop destination to explore careers, discover opportunities and begin your journey at Chiesi.</p>
+        </a>
+
+
+
+
+    </div>
+
+</div>
+
+<script>
+
+let isPink = true;
+
+function updatePhase() {
+    document.body.classList.toggle("pink-phase", isPink);
+    document.body.classList.toggle("teal-phase", !isPink);
+}
+
+updatePhase();
+
+setInterval(() => {
+    isPink = !isPink;
+    updatePhase();
+}, 5000);
+
+/* particles */
+const container = document.getElementById("particles");
+
+for (let i = 0; i < 25; i++) {
+    let p = document.createElement("div");
+    p.className = "particle";
+    p.style.left = Math.random() * 100 + "vw";
+    p.style.animationDuration = (10 + Math.random() * 10) + "s";
+    p.style.opacity = Math.random() * 0.4;
+    container.appendChild(p);
+}
+
+</script>
+
+</body>
+</html>

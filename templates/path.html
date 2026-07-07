@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<a href="/" class="top-menu-btn">🏠 Main Menu</a>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Discover My Path</title>
+
+<style>
+
+.top-menu-btn{
+    position:fixed;
+    top:15px;
+    right:15px;
+    background:#438aa2;
+    color:#ffffff;
+    padding:10px 14px;
+    border-radius:10px;
+    text-decoration:none;
+    font-weight:bold;
+    z-index:999;
+}
+
+.top-menu-btn:hover{
+    background:#0e353c;
+}
+body{
+    font-family: Arial, sans-serif;
+    margin:0;
+    padding:0;
+    background: linear-gradient(-45deg, #b5025f, #8a0248, #5a0028, #7d0240);
+    background-size: 400% 400%;
+    animation: gradientMove 9s ease infinite;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+}
+
+/* MAIN CARD */
+.container{
+    width:90%;
+    max-width:650px;
+    background: rgba(0,0,0,0.35);
+    padding:30px;
+    border-radius:20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    backdrop-filter: blur(10px);
+
+    animation: floatCard 5s ease-in-out infinite;
+}
+
+/* ================= HEADER ================= */
+
+.header{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    margin-bottom:20px;
+}
+
+/* 🔥 MUCH BIGGER LOGO */
+.header img{
+    width:180px;
+    height:180px;
+    object-fit:contain;
+    border-radius:14px;
+    background:transparent;
+}
+
+/* TEXT */
+.header-text{
+    display:flex;
+    flex-direction:column;
+    line-height:1.1;
+}
+
+.header-text .title{
+    font-size:22px;
+    font-weight:bold;
+}
+
+.header-text .subtitle{
+    font-size:13px;
+    opacity:0.85;
+}
+
+/* PROGRESS */
+#progress{
+    text-align:center;
+    margin-bottom:10px;
+    font-weight:bold;
+}
+
+/* PROGRESS BAR */
+#barContainer{
+    width:100%;
+    height:8px;
+    background: rgba(255,255,255,0.2);
+    border-radius:20px;
+    margin-bottom:20px;
+    overflow:hidden;
+}
+
+#bar{
+    height:100%;
+    width:0%;
+    background: white;
+    transition: width 0.3s ease;
+}
+
+/* QUESTION (FORCE VISIBILITY) */
+#q{
+    font-size:22px;
+    text-align:center;
+    margin:20px 0;
+    min-height:60px;
+    display:block;
+}
+
+/* BUTTON CONTAINER FIX */
+#buttons{
+    display:block;
+    min-height:200px;
+}
+
+/* MCQ BUTTONS */
+button{
+    width:100%;
+    padding:12px;
+    margin:8px 0;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    font-size:15px;
+    font-weight:bold;
+
+    background: #d0d0d0;
+    color:#222;
+    transition: 0.25s ease;
+}
+
+button:hover{
+    background: #7d0240;
+    color:white;
+    transform: scale(1.03);
+}
+
+button:active{
+    transform: scale(0.98);
+}
+
+/* RESULT */
+#result{
+    text-align:center;
+    margin-top:20px;
+}
+
+/* LINK */
+a{
+    display:inline-block;
+    margin-top:10px;
+    padding:10px 15px;
+    background:#b5025f;
+    color:white;
+    border-radius:10px;
+    text-decoration:none;
+}
+
+a:hover{
+    background:white;
+    color:#b5025f;
+}
+
+/* ACTION BUTTONS */
+#actions button{
+    background:#b5025f;
+    color:white;
+}
+
+#actions button:hover{
+    background:#7d0240;
+}
+
+@keyframes gradientMove{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+}
+
+@keyframes floatCard{
+    0%{transform:translateY(0px);}
+    50%{transform:translateY(-8px);}
+    100%{transform:translateY(0px);}
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- HEADER -->
+<div class="header">
+    <img src="/static/logo.png" alt="Chiesi Logo">
+
+    <div class="header-text">
+        <div class="title">Chiesi</div>
+        <div class="subtitle">Career Companion</div>
+    </div>
+</div>
+
+<h1>🎯 Discover My Path</h1>
+
+<h3 id="progress"></h3>
+
+<div id="barContainer">
+    <div id="bar"></div>
+</div>
+
+<p id="q"></p>
+
+<div id="buttons"></div>
+
+<h2 id="result"></h2>
+
+<div id="actions"></div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+
+/* ======================
+   LOGIC (UNCHANGED)
+   ====================== */
+
+let step = 0;
+
+let scores = {
+    rnd: 0,
+    marketing: 0,
+    sales: 0,
+    quality: 0,
+    it: 0,
+    hr: 0,
+    finance: 0,
+    supply: 0,
+    ops: 0,
+    strategy: 0
+};
+
+const questions = [
+    {
+        q: "Which type of work environment suits you best?",
+        options: [
+            {text:"Structured", type:"quality"},
+            {text:"Fast-paced", type:"sales"},
+            {text:"Creative", type:"marketing"},
+            {text:"Technical", type:"rnd"}
+        ]
+    },
+    {
+        q: "What type of tasks do you enjoy most?",
+        options: [
+            {text:"Scientific", type:"rnd"},
+            {text:"Employee-Centric People Ops", type:"hr"},
+            {text:"Organisation", type:"supply"},
+            {text:"Data Entry", type:"finance"}
+        ]
+    },
+    {
+        q: "What motivates you the most?",
+        options: [
+            {text:"Helping people", type:"sales"},
+            {text:"Innovation", type:"rnd"},
+            {text:"Strategy", type:"marketing"},
+            {text:"Efficiency", type:"ops"}
+        ]
+    },
+    {
+        q: "How do you prefer to make decisions?",
+        options: [
+            {text:"Data-Driven", type:"finance"},
+            {text:"Collaborative", type:"hr"},
+            {text:"Innovative", type:"marketing"},
+            {text:"Process-Orientated", type:"quality"}
+        ]
+    },
+    {
+        q: "Which work style sounds most like you?",
+        options: [
+            {text:"Independent", type:"rnd"},
+            {text:"Team-Based", type:"hr"},
+            {text:"Client-Facing", type:"sales"},
+            {text:"Technical Systems", type:"it"}
+        ]
+    },
+    {
+        q: "What kind of impact do you want to have?",
+        options: [
+            {text:"Novelty & Science", type:"rnd"},
+            {text:"Brand & Culture", type:"marketing"},
+            {text:"Operations & Execution", type:"supply"},
+            {text:"Finance & Growth", type:"finance"}
+        ]
+    },
+    {
+        q: "How do you handle challenges?",
+        options: [
+            {text:"Logically", type:"finance"},
+            {text:"Collectively", type:"hr"},
+            {text:"Imaginatively", type:"marketing"},
+            {text:"Structurally", type:"quality"}
+        ]
+    },
+    {
+        q: "Which sounds more interesting to you?",
+        options: [
+            {text:"Medicines", type:"rnd"},
+            {text:"Marketing", type:"marketing"},
+            {text:"Logistics", type:"supply"},
+            {text:"Business", type:"ops"}
+        ]
+    },
+    {
+        q: "What role do you naturally take in a team?",
+        options: [
+            {text:"Analyst", type:"finance"},
+            {text:"Coordinator", type:"supply"},
+            {text:"Communicator", type:"hr"},
+            {text:"Leader", type:"strategy"}
+        ]
+    },
+    {
+        q: "Final question: what best describes you?",
+        options: [
+            {text:"Thinker", type:"rnd"},
+            {text:"Talker", type:"sales"},
+            {text:"Creator", type:"marketing"},
+            {text:"Doer", type:"quality"}
+        ]
+    }
+];
+
+function render(){
+
+    const current = questions[step];
+
+    document.getElementById("progress").innerText =
+        "Question " + (step + 1) + " / " + questions.length;
+
+    document.getElementById("bar").style.width =
+        ((step / questions.length) * 100) + "%";
+
+    document.getElementById("q").innerText = current.q;
+
+    const container = document.getElementById("buttons");
+    container.innerHTML = "";
+
+    current.options.forEach(opt => {
+
+        const btn = document.createElement("button");
+        btn.innerText = opt.text;
+        btn.onclick = () => answer(opt.type);
+
+        container.appendChild(btn);
+    });
+}
+
+function answer(type){
+
+    scores[type]++;
+    step++;
+
+    if(step < questions.length){
+        render();
+    } else {
+        finish();
+    }
+}
+
+function finish(){
+
+    document.getElementById("bar").style.width = "100%";
+
+    let best = Object.keys(scores).reduce((a,b)=>
+        scores[a] > scores[b] ? a : b
+    );
+
+    const map = {
+        rnd: {
+            name: "R&D / Pharmacovigilance & Regulatory Affairs",
+            url: "https://careers.chiesi.com/go/R%26D%2C-Pharmacovigilance-%26-Regulatory-Affairs_uk/8618402/",
+            desc: "Scientific research and medicine development."
+        },
+        marketing: {
+            name: "Marketing, Market Access & Medical Affairs",
+            url: "https://careers.chiesi.com/go/Marketing%2C-Market-Access-%26-Business-Excellence-%26-Medical-Affairs_uk/8618702/",
+            desc: "Brand, strategy, and healthcare communication."
+        },
+        sales: {
+            name: "Sales",
+            url: "https://careers.chiesi.com/go/Sales_uk/8618802/",
+            desc: "Healthcare engagement and commercial impact."
+        },
+        quality: {
+            name: "Quality",
+            url: "https://careers.chiesi.com/go/Quality_uk/8618602/",
+            desc: "Compliance, safety, and excellence."
+        },
+        it: {
+            name: "Information Technology",
+            url: "https://careers.chiesi.com/go/Information-Technology_uk/8619402/",
+            desc: "Digital systems and innovation."
+        },
+        hr: {
+            name: "Human Resources",
+            url: "https://careers.chiesi.com/go/Human-Resources_uk/8619102/",
+            desc: "People, culture, and development."
+        },
+        finance: {
+            name: "Accounting, Finance & Control",
+            url: "https://careers.chiesi.com/go/AccountingFinance-&-Control_uk/8619002/",
+            desc: "Financial planning and analysis."
+        },
+        supply: {
+            name: "Supply Chain & Logistics",
+            url: "https://careers.chiesi.com/go/Supply-ChainLogistics-&-Procurement_uk/8619302/",
+            desc: "Operations and logistics."
+        },
+        ops: {
+            name: "Industrial Operations & HSE",
+            url: "https://careers.chiesi.com/go/Industrial-Operations-&-HSE_uk/8618502/",
+            desc: "Manufacturing and safety."
+        },
+        strategy: {
+            name: "Business Development & Strategic Planning",
+            url: "https://careers.chiesi.com/go/Business-Development-&-Strategic-planning_uk/8619202/",
+            desc: "Strategy and leadership."
+        }
+    };
+
+    const result = map[best];
+
+    document.getElementById("progress").innerText =
+        "Assessment Complete 🎉";
+
+    document.getElementById("q").innerText =
+        "Your career pathway has been identified.";
+
+    document.getElementById("q").style.marginBottom = "4px";
+
+    document.getElementById("buttons").innerHTML = "";
+
+    document.getElementById("result").innerHTML =
+        "<b>Recommended Pathway:</b><br><br>" +
+        "<b style='color:#b5025f;font-size:20px;'>" + result.name + "</b><br><br>" +
+        result.desc + "<br><br>" +
+        "<a href='" + result.url + "' target='_blank'>Explore this pathway</a>";
+
+    document.getElementById("actions").innerHTML = `
+        <br><br>
+        <button onclick="downloadPDF()">⬇ Download PDF</button>
+        <button onclick="goHome()">🏠 Main Menu</button>
+    `;
+}
+
+function downloadPDF(){
+
+
+    const { jsPDF } = window.jspdf;
+
+    const pdf = new jsPDF({
+        orientation: "p",
+        unit: "mm",
+        format: "a4"
+    });
+
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+
+    let best = Object.keys(scores).reduce((a,b)=>
+        scores[a] > scores[b] ? a : b
+    );
+
+
+const total = Object.values(scores).reduce((a,b)=>a+b,0);
+
+const percentages = Object.entries(scores).map(([key,val])=>{
+    return {
+        key,
+        value: Math.round((val / total) * 100)
+    };
+});
+
+percentages.sort((a,b)=>b.value - a.value);
+const top3 = percentages.slice(0,3);
+
+const nameMap = {
+    rnd:"R&D / Pharmacovigilance & Regulatory Affairs",
+    marketing:"Marketing, Market Access & Medical Affairs",
+    sales:"Sales",
+    quality:"Quality",
+    it:"Information Technology",
+    hr:"Human Resources",
+    finance:"Accounting, Finance & Control",
+    supply:"Supply Chain & Logistics",
+    ops:"Industrial Operations & HSE",
+    strategy:"Business Development & Strategic Planning"
+};
+
+const map = {
+    rnd:{
+        title:"R&D / PHARMACOVIGILANCE & REGULATORY AFFAIRS",
+        desc:"You are suited to scientific research, medicine development, innovation and regulatory excellence.",
+        themes:["Innovation","Scientific Thinking","Problem Solving","Research Mindset"],
+        closing:"You show strong alignment with scientific and research-driven environments."
+    },
+
+    marketing:{
+        title:"MARKETING, MARKET ACCESS & MEDICAL AFFAIRS",
+        desc:"You are suited to brand strategy, communication, market insight and healthcare engagement.",
+        themes:["Creativity","Strategy","Communication","Market Awareness"],
+        closing:"You demonstrate strong potential in strategic and creative business environments."
+    },
+
+    sales:{
+        title:"SALES",
+        desc:"You are suited to relationship building, customer engagement and commercial impact.",
+        themes:["Communication","Influence","Relationship Building","Commercial Drive"],
+        closing:"You show strong ability in people-facing, performance-driven roles."
+    },
+
+    quality:{
+        title:"QUALITY",
+        desc:"You are suited to compliance, quality systems and continuous improvement.",
+        themes:["Precision","Structure","Compliance","Attention to Detail"],
+        closing:"You thrive in structured, standards-driven environments."
+    },
+
+    it:{
+        title:"INFORMATION TECHNOLOGY",
+        desc:"You are suited to digital innovation, systems management and technical solutions.",
+        themes:["Systems Thinking","Technical Skills","Problem Solving","Innovation"],
+        closing:"You show strong potential in technical and digital environments."
+    },
+
+    hr:{
+        title:"HUMAN RESOURCES",
+        desc:"You are suited to people development, culture and organisational growth.",
+        themes:["People Focus","Communication","Empathy","Organisation"],
+        closing:"You are well aligned with people-first organisational roles."
+    },
+
+    finance:{
+        title:"ACCOUNTING, FINANCE & CONTROL",
+        desc:"You are suited to financial planning, analysis and business performance.",
+        themes:["Numbers","Analysis","Accuracy","Business Insight"],
+        closing:"You demonstrate strong analytical and financial awareness."
+    },
+
+    supply:{
+        title:"SUPPLY CHAIN & LOGISTICS",
+        desc:"You are suited to operations, logistics and process coordination.",
+        themes:["Organisation","Efficiency","Planning","Coordination"],
+        closing:"You are well suited to operational and logistics-driven roles."
+    },
+
+    ops:{
+        title:"INDUSTRIAL OPERATIONS & HSE",
+        desc:"You are suited to manufacturing excellence, safety and operational delivery.",
+        themes:["Execution","Safety","Operations","Process Control"],
+        closing:"You thrive in hands-on operational environments."
+    },
+
+    strategy:{
+        title:"BUSINESS DEVELOPMENT & STRATEGIC PLANNING",
+        desc:"You are suited to leadership, long-term planning and business growth.",
+        themes:["Leadership","Strategy","Vision","Decision Making"],
+        closing:"You demonstrate strong strategic and leadership potential."
+    }
+};
+
+    const result = map[best];
+
+    // FULL PAGE BACKGROUND
+    pdf.setFillColor(181,2,95);
+    pdf.rect(0,0,pageW,pageH,"F");
+
+    // HEADER
+    pdf.setTextColor(255,255,255);
+    pdf.setFontSize(24);
+    pdf.setFont(undefined,"bold");
+
+    pdf.text(
+        "CHIESI CAREER PATH REPORT",
+        pageW/2,
+        22,
+        {align:"center"}
+    );
+
+    // MAIN CARD
+    pdf.setFillColor(255,255,255);
+
+    pdf.roundedRect(
+        12,
+        35,
+        pageW-24,
+        170,
+        8,
+        8,
+        "F"
+    );
+
+    pdf.setTextColor(181,2,95);
+
+    pdf.setFontSize(12);
+
+    pdf.text(
+        "RECOMMENDED CAREER PATHWAY",
+        pageW/2,
+        55,
+        {align:"center"}
+    );
+
+    pdf.setFontSize(18);
+    pdf.setFont(undefined,"bold");
+
+    const titleLines = pdf.splitTextToSize(
+    	result.title,
+    	140
+
+    );
+
+    pdf.text(
+        titleLines,
+        pageW/2,
+        75,
+        {align:"center"}
+    );
+
+    pdf.setFont(undefined,"normal");
+    pdf.setFontSize(12);
+
+    pdf.setTextColor(50,50,50);
+
+    const desc = pdf.splitTextToSize(
+        result.desc,
+        150
+    );
+
+    pdf.text(
+        desc,
+        pageW/2,
+        95,
+        {align:"center"}
+    );
+
+    // KEY THEMES
+ // KEY THEMES
+pdf.setTextColor(181,2,95);
+pdf.setFontSize(15);
+
+pdf.text(
+    "KEY THEMES",
+    pageW/2,
+    125,
+    {align:"center"}
+);
+
+pdf.setTextColor(50,50,50);
+pdf.setFontSize(12);
+
+let y = 140;
+
+result.themes.forEach(t => {
+    pdf.text(t, pageW/2, y, {align:"center"});
+    y += 10;
+});
+
+
+// TOP CAREER MATCHES
+pdf.setTextColor(255,255,255);
+pdf.setFontSize(14);
+pdf.setFont(undefined,"bold");
+
+pdf.text(
+    "TOP CAREER MATCHES",
+    pageW/2,
+    155,
+    {align:"center"}
+);
+
+let y2 = 165;
+
+pdf.setFontSize(12);
+pdf.setFont(undefined,"normal");
+
+top3.forEach((item, index) => {
+
+    const text =
+        (index+1) + ". " +
+        nameMap[item.key] +
+        "   " +
+        item.value + "%";
+
+    pdf.text(
+        text,
+        pageW/2,
+        y2,
+        {align:"center"}
+    );
+
+    y2 += 8;
+});
+
+
+// BOTTOM BOX (CLEAN - ONLY ONCE)
+pdf.setFillColor(181,2,95);
+
+pdf.roundedRect(
+    20,
+    185,
+    pageW-40,
+    35,
+    5,
+    5,
+    "F"
+);
+
+pdf.setTextColor(255,255,255);
+pdf.setFontSize(14);
+pdf.setFont(undefined,"bold");
+
+const closingLines = pdf.splitTextToSize(
+    result.closing,
+    160
+);
+
+pdf.text(
+    closingLines,
+    pageW/2,
+    198,
+    {align:"center"}
+);
+
+    pdf.setFontSize(9);
+
+    pdf.text(
+        "Generated by Chiesi Career Companion",
+        pageW/2,
+        285,
+        {align:"center"}
+    );
+
+    pdf.save("Chiesi_Career_Path_Report.pdf");
+}
+
+function goHome(){
+    window.location.href = "/";
+}
+
+render();
+
+</script>
+
+</body>
+</html>

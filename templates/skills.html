@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<a href="/" class="top-menu-btn">🏠 Main Menu</a>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Match My Skills</title>
+
+<style>
+
+.top-menu-btn{
+    position:fixed;
+    top:15px;
+    right:15px;
+    background:#b5025f;
+    color:white;
+    padding:10px 14px;
+    border-radius:10px;
+    text-decoration:none;
+    font-weight:bold;
+    z-index:999;
+}
+
+.top-menu-btn:hover{
+    background:#8f034b;
+}
+
+body{
+    font-family: Arial, sans-serif;
+    margin:0;
+    padding:0;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+
+    background: linear-gradient(-45deg, #438aa2, #2c5f6f, #1b2f38, #0b1418);
+    background-size: 400% 400%;
+    animation: gradientMove 9s ease infinite;
+}
+
+/* MAIN CARD */
+.container{
+    width:90%;
+    max-width:650px;
+    background: rgba(0,0,0,0.35);
+    padding:30px;
+    border-radius:20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    backdrop-filter: blur(10px);
+    animation: floatCard 5s ease-in-out infinite;
+}
+
+/* HEADER */
+.header{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:20px;
+}
+
+/* FIXED LOGO (THIS WAS THE ISSUE) */
+.header img{
+    width:140px;
+    height:auto;
+    object-fit:contain;
+    display:block;
+}
+
+/* TEXT */
+.header-text{
+    display:flex;
+    flex-direction:column;
+}
+
+.header-text .title{
+    font-size:18px;
+    font-weight:bold;
+}
+
+.header-text .subtitle{
+    font-size:12px;
+    opacity:0.85;
+}
+
+/* PROGRESS */
+#progress{
+    text-align:center;
+    margin-bottom:10px;
+    font-weight:bold;
+}
+
+/* BAR */
+#barContainer{
+    width:100%;
+    height:8px;
+    background: rgba(255,255,255,0.2);
+    border-radius:20px;
+    margin-bottom:20px;
+    overflow:hidden;
+}
+
+#bar{
+    height:100%;
+    width:0%;
+    background: linear-gradient(90deg, #ffffff, #438aa2, #ffffff);
+    background-size:200% 100%;
+    animation: barGlow 2s linear infinite;
+    transition: width 0.3s ease;
+}
+
+/* QUESTION (THIS WAS LIKELY NOT VISIBLE BEFORE) */
+#q{
+    font-size:20px;
+    text-align:center;
+    margin:20px 0;
+    min-height:40px; /* prevents blank collapse */
+}
+
+/* BUTTONS */
+button{
+    width:100%;
+    padding:12px;
+    margin:8px 0;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    font-size:15px;
+    font-weight:bold;
+
+    background:#d0d0d0;
+    color:#222;
+    transition:0.25s ease;
+}
+
+button:hover{
+    background:#2c5f6f;
+    color:white;
+    transform:scale(1.03);
+}
+
+/* RESULT */
+#result{
+    text-align:center;
+    margin-top:10px;
+    animation: popIn 0.5s ease;
+}
+
+/* ACTIONS */
+#actions button{
+    background:#438aa2;
+    color:white;
+}
+
+/* ANIMATIONS */
+@keyframes gradientMove{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+}
+
+@keyframes floatCard{
+    0%{transform:translateY(0px);}
+    50%{transform:translateY(-8px);}
+    100%{transform:translateY(0px);}
+}
+
+@keyframes barGlow{
+    0%{background-position:0% 0%;}
+    100%{background-position:200% 0%;}
+}
+
+@keyframes popIn{
+    0%{opacity:0; transform:translateY(10px);}
+    100%{opacity:1; transform:translateY(0);}
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+    <!-- FIXED PATHING (MOST COMMON LOGO BUG) -->
+    <img src="/static/Logo.png" alt="logo">
+
+    <div class="header-text">
+        <div class="title">Chiesi</div>
+        <div class="subtitle">Skills Profile Engine</div>
+    </div>
+</div>
+
+<h1>🧩 Match My Skills</h1>
+
+<h3 id="progress"></h3>
+
+<div id="barContainer">
+    <div id="bar"></div>
+</div>
+
+<!-- FIX: ensure question always renders -->
+<p id="q">Loading question...</p>
+
+<div id="buttons"></div>
+
+<h2 id="result"></h2>
+
+<div id="actions"></div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+
+let step = 0;
+
+let scores = {
+    analytical: 0,
+    communication: 0,
+    organisation: 0,
+    leadership: 0
+};
+
+const questions = [
+    {
+        q: "You have one hour free at work. What are you most likely to do?",
+        options: [
+            {text:"Improve a process", type:"analytical"},
+            {text:"Help a colleague", type:"communication"},
+            {text:"Organise tasks", type:"organisation"},
+            {text:"Start something new", type:"leadership"}
+        ]
+    },
+    {
+        q: "A project suddenly goes off track. What do you do first?",
+        options: [
+            {text:"Investigate the issue", type:"analytical"},
+            {text:"Talk to the team", type:"communication"},
+            {text:"Create structure", type:"organisation"},
+            {text:"Take action quickly", type:"leadership"}
+        ]
+    },
+    {
+        q: "What task sounds most enjoyable?",
+        options: [
+            {text:"Solving problems", type:"analytical"},
+            {text:"Presenting ideas", type:"communication"},
+            {text:"Planning activities", type:"organisation"},
+            {text:"Leading tasks", type:"leadership"}
+        ]
+    },
+    {
+        q: "Which type of feedback do you value most?",
+        options: [
+            {text:"You solved it logically", type:"analytical"},
+            {text:"You communicated clearly", type:"communication"},
+            {text:"You stayed organised", type:"organisation"},
+            {text:"You took initiative", type:"leadership"}
+        ]
+    },
+    {
+        q: "What do people most often compliment you on?",
+        options: [
+            {text:"Problem solving", type:"analytical"},
+            {text:"Communication", type:"communication"},
+            {text:"Reliability", type:"organisation"},
+            {text:"Drive", type:"leadership"}
+        ]
+    },
+    {
+        q: "What usually drains your energy the most?",
+        options: [
+            {text:"Repetitive analysis", type:"analytical"},
+            {text:"Long solo work", type:"communication"},
+            {text:"Unstructured tasks", type:"organisation"},
+            {text:"Slow decision making", type:"leadership"}
+        ]
+    },
+    {
+        q: "Imagine you're joining a brand-new team. What would you naturally focus on first?",
+        options: [
+            {text:"Understanding systems", type:"analytical"},
+            {text:"Getting to know people", type:"communication"},
+            {text:"Creating structure", type:"organisation"},
+            {text:"Finding opportunities", type:"leadership"}
+        ]
+    },
+    {
+        q: "What do people most often come to you for help with?",
+        options: [
+            {text:"Fixing problems", type:"analytical"},
+            {text:"Explaining things", type:"communication"},
+            {text:"Organising work", type:"organisation"},
+            {text:"Making decisions", type:"leadership"}
+        ]
+    },
+    {
+        q: "Which challenge sounds most appealing?",
+        options: [
+            {text:"Complex problems", type:"analytical"},
+            {text:"Team coordination", type:"communication"},
+            {text:"Process improvement", type:"organisation"},
+            {text:"Leading change", type:"leadership"}
+        ]
+    },
+    {
+        q: "Final question: which word best describes you?",
+        options: [
+            {text:"Analytical", type:"analytical"},
+            {text:"Communicator", type:"communication"},
+            {text:"Organised", type:"organisation"},
+            {text:"Driven", type:"leadership"}
+        ]
+    }
+];
+
+function render(){
+    const current = questions[step];
+
+    document.getElementById("progress").innerText =
+        "Question " + (step + 1) + " / " + questions.length;
+
+    document.getElementById("bar").style.width =
+        ((step / questions.length) * 100) + "%";
+
+    // 🔥 FIX: ensures question always shows
+    document.getElementById("q").innerText = current.q;
+
+    const container = document.getElementById("buttons");
+    container.innerHTML = "";
+
+    current.options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.innerText = opt.text;
+        btn.onclick = () => answer(opt.type);
+        container.appendChild(btn);
+    });
+}
+
+function answer(type){
+    scores[type]++;
+    step++;
+
+    if(step < questions.length){
+        render();
+    } else {
+        finish();
+    }
+}
+
+function finish(){
+
+    document.getElementById("bar").style.width = "100%";
+
+    let best = Object.keys(scores).reduce((a,b)=>
+        scores[a] > scores[b] ? a : b
+    );
+
+    const map = {
+        analytical: { name:"Analytical Thinking", desc:"You excel at structured thinking and problem solving." },
+        communication: { name:"Communication Strength", desc:"You communicate ideas clearly and effectively." },
+        organisation: { name:"Organisation & Structure", desc:"You thrive in structured and planned environments." },
+        leadership: { name:"Leadership & Initiative", desc:"You naturally take charge and drive progress." }
+    };
+
+    const result = map[best];
+
+    document.getElementById("progress").innerText =
+        "Skills Assessment Complete 🎉";
+
+    document.getElementById("q").innerText =
+        "Your skills profile has been generated.";
+
+    document.getElementById("buttons").innerHTML = "";
+
+    document.getElementById("result").innerHTML =
+        "<b>Primary Strength:</b><br><br>" +
+        "<b style='color:#438aa2;font-size:20px;'>" + result.name + "</b><br><br>" +
+        result.desc;
+
+    document.getElementById("actions").innerHTML = `
+        <br><br>
+        <button onclick="downloadPDF()">⬇ Download PDF</button>
+        <button onclick="goHome()">🏠 Main Menu</button>
+    `;
+}
+
+function downloadPDF(){
+
+    const { jsPDF } = window.jspdf;
+
+    const pdf = new jsPDF({
+        orientation: "p",
+        unit: "mm",
+        format: "a4"
+    });
+
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+
+    let best = Object.keys(scores).reduce((a,b)=>
+        scores[a] > scores[b] ? a : b
+    );
+
+const map = {
+    analytical:{
+        title:"ANALYTICAL THINKING",
+        desc:"You excel at logical reasoning, structured problem solving, data interpretation and critical thinking.",
+        strengths:["Problem Solving","Data Analysis","Critical Thinking","Pattern Recognition"],
+        closing:"Your responses show strong analytical capability and structured thinking."
+    },
+
+    communication:{
+        title:"COMMUNICATION",
+        desc:"You excel at explaining ideas, collaborating with others and building relationships.",
+        strengths:["Communication","Teamwork","Clarity","Influence"],
+        closing:"Your responses show strong interpersonal and communication ability."
+    },
+
+    organisation:{
+        title:"ORGANISATION & STRUCTURE",
+        desc:"You thrive in planning, coordination and structured environments.",
+        strengths:["Planning","Organisation","Time Management","Structure"],
+        closing:"Your responses show strong organisational and process discipline."
+    },
+
+    leadership:{
+        title:"LEADERSHIP & INITIATIVE",
+        desc:"You naturally take ownership, lead others and drive progress.",
+        strengths:["Leadership","Decision Making","Initiative","Responsibility"],
+        closing:"Your responses show strong leadership potential and initiative."
+    }
+};
+    const result = map[best];
+
+    // FULL PAGE BACKGROUND
+    pdf.setFillColor(67,138,162);
+    pdf.rect(0,0,pageW,pageH,"F");
+
+    // TOP TITLE
+    pdf.setTextColor(255,255,255);
+    pdf.setFontSize(24);
+    pdf.setFont(undefined,"bold");
+
+    pdf.text(
+        "CHIESI SKILLS PROFILE",
+        pageW/2,
+        22,
+        {align:"center"}
+    );
+
+    // WHITE MAIN CARD
+    pdf.setFillColor(255,255,255);
+
+    pdf.roundedRect(
+        12,
+        35,
+        pageW-24,
+        170,
+        8,
+        8,
+        "F"
+    );
+
+    // SECTION LABEL
+
+    pdf.setTextColor(67,138,162);
+
+    pdf.setFontSize(12);
+
+    pdf.text(
+        "YOUR STRONGEST SKILL",
+        pageW/2,
+        55,
+        {align:"center"}
+    );
+
+    // MAIN RESULT
+
+    pdf.setFontSize(26);
+    pdf.setFont(undefined,"bold");
+
+    pdf.text(
+        result.title,
+        pageW/2,
+        75,
+        {align:"center"}
+    );
+
+    // DESCRIPTION
+
+    pdf.setFont(undefined,"normal");
+
+    pdf.setFontSize(12);
+
+    pdf.setTextColor(50,50,50);
+
+    const desc = pdf.splitTextToSize(
+        result.desc,
+        140
+    );
+
+    pdf.text(
+        desc,
+        pageW/2,
+        95,
+        {align:"center"}
+    );
+
+    // STRENGTHS SECTION
+
+pdf.setTextColor(67,138,162);
+pdf.setFontSize(15);
+
+pdf.text(
+    "KEY STRENGTHS",
+    pageW/2,
+    125,
+    {align:"center"}
+);
+
+pdf.setTextColor(50,50,50);
+pdf.setFontSize(12);
+
+let y = 140;
+
+result.strengths.forEach(s => {
+    pdf.text(s, pageW/2, y, {align:"center"});
+    y += 10;
+});
+    // CAREER FIT SECTION
+
+    pdf.setFillColor(67,138,162);
+
+    pdf.roundedRect(
+        20,
+        185,
+        pageW-40,
+        35,
+        5,
+        5,
+        "F"
+    );
+
+    pdf.setFillColor(67,138,162);
+
+pdf.roundedRect(
+    20,
+    185,
+    pageW-40,
+    35,
+    5,
+    5,
+    "F"
+);
+
+pdf.setTextColor(255,255,255);
+pdf.setFontSize(14);
+pdf.setFont(undefined,"bold");
+
+const closingLines = pdf.splitTextToSize(
+    result.closing,
+    160
+);
+
+pdf.text(
+    closingLines,
+    pageW/2,
+    198,
+    {align:"center"}
+);
+    // FOOTER
+
+    pdf.setFontSize(9);
+
+    pdf.text(
+        "Generated by Chiesi Career Companion",
+        pageW/2,
+        285,
+        {align:"center"}
+    );
+
+    pdf.save("Chiesi_Skills_Profile.pdf");
+}
+
+function goHome(){
+    window.location.href = "/";
+}
+
+render();
+
+</script>
+
+</body>
+</html>
